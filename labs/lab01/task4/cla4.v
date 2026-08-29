@@ -32,6 +32,7 @@ module cla4(
   wire p0, p1, p2, p3;
   wire g0, g1, g2, g3;
   wire c1, c2, c3;
+  wire t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
 
   // TODO: your gate-level P/G, carry, and sum logic goes here.
   xor #(2) (p0, a[0], b[0]);
