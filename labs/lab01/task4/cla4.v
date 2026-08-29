@@ -31,43 +31,75 @@ module cla4(
 
   wire p0, p1, p2, p3;
   wire g0, g1, g2, g3;
-  wire c1, c2, c3;
-  wire t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
+  wire c1, c2, c3, c4;
+ 
 
   // TODO: your gate-level P/G, carry, and sum logic goes here.
+  // Intermediate carry terms
+  wire c1_t0;
+  wire c2_t0, c2_t1;
+  wire c3_t0, c3_t1, c3_t2;
+  wire c4_t0, c4_t1, c4_t2, c4_t3;
+
+  // Step 1: Generate and Propagate
+
   xor #(2) (p0, a[0], b[0]);
-   xor #(2) (p1, a[1], b[1]);
-   xor #(2) (p2, a[2], b[2]);
-   xor #(2) (p3, a[3], b[3]);
+  xor #(2) (p1, a[1], b[1]);
+  xor #(2) (p2, a[2], b[2]);
+  xor #(2) (p3, a[3], b[3]);
 
-   and #(2) (g0, a[0], b[0]);
-   and #(2) (g1, a[1], b[1]);
-   and #(2) (g2, a[2], b[2]);
-   and #(2) (g3, a[3], b[3]);
-   
-    and #(2) (t0, p0, cin);
-    or  #(2) (c1, g0, t0);
+  and #(2) (g0, a[0], b[0]);
+  and #(2) (g1, a[1], b[1]);
+  and #(2) (g2, a[2], b[2]);
+  and #(2) (g3, a[3], b[3]);
 
-    and #(2) (t1, p1, g0);
-    and #(2) (t2, p1, p0, cin);
-    or  #(2) (c2, g1, t1, t2);
 
-    and #(2) (t3, p2, g1);
-    and #(2) (t4, p2, p1, g0);
-    and #(2) (t5, p2, p1, p0, cin);
-    or  #(2) (c3, g2, t3, t4, t5);
+  // Step 2: Carry-lookahead equations
 
-    and #(2) (t6, p3, g2);
-    and #(2) (t7, p3, p2, g1);
-    and #(2) (t8, p3, p2, p1, g0);
-    and #(2) (t9, p3, p2, p1, p0, cin);
+  // c1 = g0 + p0.cin
+  and #(2) (c1_t0, p0, cin);
+  or  #(2) (c1, g0, c1_t0);
 
-    or #(2) (cout, g3, t6, t7, t8, t9);
 
-    xor #(2) (sum[0], p0, cin);
-    xor #(2) (sum[1], p1, c1);
-    xor #(2) (sum[2], p2, c2);
-    xor #(2) (sum[3], p3, c3);    
+  // c2 = g1 + p1.g0 + p1.p0.cin
+  and #(2) (c2_t0, p1, g0);
+  and #(2) (c2_t1, p1, p0, cin);
+  or  #(2) (c2, g1, c2_t0, c2_t1);
+
+
+  // c3 = g2 + p2.g1 + p2.p1.g0 + p2.p1.p0.cin
+  and #(2) (c3_t0, p2, g1);
+  and #(2) (c3_t1, p2, p1, g0);
+  and #(2) (c3_t2, p2, p1, p0, cin);
+  or  #(2) (c3, g2, c3_t0, c3_t1, c3_t2);
+
+
+  // c4 = g3 + p3.g2 + p3.p2.g1
+  //      + p3.p2.p1.g0 + p3.p2.p1.p0.cin
+  and #(2) (c4_t0, p3, g2);
+  and #(2) (c4_t1, p3, p2, g1);
+  and #(2) (c4_t2, p3, p2, p1, g0);
+  and #(2) (c4_t3, p3, p2, p1, p0, cin);
+  or  #(2) (c4, g3, c4_t0, c4_t1, c4_t2, c4_t3);
+
+
+  // Step 3: Sum bits
+
+  // sum[0] = p0 ^ cin
+  xor #(2) (sum[0], p0, cin);
+
+  // sum[1] = p1 ^ c1
+  xor #(2) (sum[1], p1, c1);
+
+  // sum[2] = p2 ^ c2
+  xor #(2) (sum[2], p2, c2);
+
+  // sum[3] = p3 ^ c3
+  xor #(2) (sum[3], p3, c3);
+
+
+  // Final carry
+  assign cout = c4; 
   // (cout should be connected to c4.) Remember the delay on every gate.
 
 endmodule
